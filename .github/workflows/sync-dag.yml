@@ -1,0 +1,45 @@
+name: 'Build and upload to S3 Bucket & Deploy to EC2 with Lambda'
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'dags/**'
+      - 'scripts/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3.3.0
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload S3
+        run: |
+          aws s3 sync dags s3://${{ secrets.AWS_S3_BUCKET_NAME }}/dags --exact-timestamps
+          aws s3 sync scripts s3://${{ secrets.AWS_S3_BUCKET_NAME }}/scripts --exact-timestamps
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Update dags to EC2 with Lambda
+        run:
+          aws lambda invoke --function-name ${{ secrets.AWS_SYNC_DAG_LAMBDA }} --cli-connect-timeout 60 response.json
