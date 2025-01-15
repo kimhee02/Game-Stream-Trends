@@ -1,3 +1,5 @@
+data
+
 # Airflow configuration
 airflow.cfg
 airflow_login.py
