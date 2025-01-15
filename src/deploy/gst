@@ -1,0 +1,15 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /home/ubuntu/gst-front/src/frontend/dist;
+    index index.html;
+
+    location =  / {
+        return 301 /home;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
