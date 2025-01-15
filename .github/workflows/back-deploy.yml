@@ -1,0 +1,22 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - feature/web-back
+
+jobs:
+  deploy:
+    name: Deploy to Internal Instance
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to Web Host and execute commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.WEB_HOST }}
+          username: ${{ secrets.WEB_USER }}
+          key: ${{ secrets.BASTION_KEY }}
+          script_stop: true  
+          script: |
+            cd /home/${{ secrets.WEB_USER }}
+            bash deploy_back.sh
